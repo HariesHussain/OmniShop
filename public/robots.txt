@@ -1,0 +1,19 @@
+User-agent: *
+Allow: /
+
+# Block private dashboards from indexing
+Disallow: /admin
+Disallow: /seller/dashboard
+Disallow: /delivery
+Disallow: /checkout
+Disallow: /cart
+Disallow: /profile
+Disallow: /settings
+Disallow: /orders
+Disallow: /success
+Disallow: /cancel
+Disallow: /reset-password
+Disallow: /sign-in
+Disallow: /register
+
+Sitemap: https://www.omnishop.in/sitemap.xml

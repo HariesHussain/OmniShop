@@ -1,0 +1,47 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "orders",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "buyer_email", "mode": "ASCENDING" },
+        { "fieldPath": "created_date", "mode": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "orders",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "assignedDeliveryBoyId", "mode": "ASCENDING" },
+        { "fieldPath": "deliveryStatus", "mode": "ASCENDING" },
+        { "fieldPath": "created_date", "mode": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "orders",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "mode": "ASCENDING" },
+        { "fieldPath": "created_date", "mode": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "deliveryAssignments",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "delivery_boy_id", "mode": "ASCENDING" },
+        { "fieldPath": "estimated_delivery_date_key", "mode": "ASCENDING" },
+        { "fieldPath": "created_date", "mode": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "deliveryAssignments",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "estimated_delivery_date_key", "mode": "ASCENDING" },
+        { "fieldPath": "status", "mode": "ASCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

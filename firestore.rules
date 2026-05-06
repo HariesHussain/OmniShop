@@ -1,0 +1,136 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAuthenticated() { return request.auth != null; }
+    function userDocPath() { return /databases/$(database)/documents/users/$(request.auth.uid); }
+    function userDocExists() { return isAuthenticated() && exists(userDocPath()); }
+    function userData() { return userDocExists() ? get(userDocPath()).data : {}; }
+    function userRole() { return userData().get('role', 'user'); }
+    function changedKeys() { return request.resource.data.diff(resource.data).changedKeys(); }
+
+    function isAdmin() { return isAuthenticated() && userRole() == 'admin'; }
+    function isSeller() { return isAuthenticated() && userRole() == 'seller'; }
+    function isDelivery() { return isAuthenticated() && userRole() == 'delivery_boy'; }
+    function isOwner(uid) { return isAuthenticated() && request.auth.uid == uid; }
+    function email() { return isAuthenticated() ? request.auth.token.email : ''; }
+
+    function orderBelongsToBuyer(orderData) {
+      return isAuthenticated() && orderData.buyer_uid == request.auth.uid;
+    }
+
+    function orderBelongsToSeller(orderData) {
+      return isSeller() && (
+        (orderData.seller_emails is list && orderData.seller_emails.hasAny([email()])) ||
+        (orderData.items is list && orderData.items.size() > 0 && orderData.items[0].seller_email == email())
+      );
+    }
+
+    function orderBelongsToDelivery(orderData) {
+      return isDelivery() && (
+        orderData.assignedDeliveryBoyId == request.auth.uid ||
+        orderData.assignedDeliveryBoyEmail == email()
+      );
+    }
+
+    function orderCanBeCancelledByBuyer(orderData) {
+      return orderBelongsToBuyer(orderData)
+        && (orderData.status == 'pending' || orderData.status == 'confirmed')
+        && changedKeys().hasOnly(['status', 'payment_status'])
+        && request.resource.data.status == 'cancelled';
+    }
+
+    function orderCanBeUpdatedByDelivery(orderData) {
+      return orderBelongsToDelivery(orderData)
+        && changedKeys().hasOnly(['status', 'payment_status'])
+        && request.resource.data.status in ['confirmed', 'shipped', 'delivered'];
+    }
+
+    function canReadOrder(orderData) {
+      return isAdmin() || orderBelongsToBuyer(orderData) || orderBelongsToSeller(orderData) || orderBelongsToDelivery(orderData);
+    }
+
+    function deliveryAssignmentBelongsToDriver(assignmentData) {
+      return isDelivery() && (
+        assignmentData.delivery_boy_id == request.auth.uid ||
+        assignmentData.delivery_boy_email == email()
+      );
+    }
+
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId) && request.resource.data.role == 'user';
+      allow update: if (isOwner(userId) && request.resource.data.get('role', userRole()) == resource.data.get('role', 'user')) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /products/{productId} {
+      allow read: if true;
+      allow create: if (isSeller() || isAdmin()) && request.resource.data.seller_email == email();
+      allow update, delete: if (isSeller() && resource.data.seller_email == email()) || isAdmin();
+    }
+
+    match /cartItems/{cartId} {
+      allow read, delete: if isAuthenticated() && resource.data.user_email == email();
+      allow create: if isAuthenticated() && request.resource.data.user_email == email();
+      allow update: if isAuthenticated() &&
+        resource.data.user_email == email() &&
+        request.resource.data.user_email == email();
+    }
+
+    match /orders/{orderId} {
+      allow read: if canReadOrder(resource.data);
+      // Server-only create through backend/Admin SDK.
+      allow create: if false;
+      allow update: if isAdmin()
+        || orderCanBeCancelledByBuyer(resource.data)
+        || orderCanBeUpdatedByDelivery(resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /reviews/{reviewId} {
+      allow read: if true;
+      allow create: if isAuthenticated() && request.resource.data.reviewer_email == email();
+      allow update, delete: if (isAuthenticated() && resource.data.reviewer_email == email()) || isAdmin();
+    }
+
+    match /notifications/{notificationId} {
+      allow read: if isAuthenticated() && (resource.data.user_email == email() || resource.data.is_broadcast == true || isAdmin());
+      allow create: if isAdmin() || isDelivery();
+      allow update: if isAuthenticated() && (resource.data.user_email == email() || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    match /sellerApplications/{appId} {
+      allow read: if isAuthenticated() && (resource.data.applicant_email == email() || isAdmin());
+      allow create: if isAuthenticated() && request.resource.data.applicant_email == email();
+      allow update, delete: if isAdmin();
+    }
+
+    match /deliveryApplications/{appId} {
+      allow read: if isAuthenticated() && (resource.data.applicant_email == email() || isAdmin());
+      allow create: if isAuthenticated() && request.resource.data.applicant_email == email();
+      allow update, delete: if isAdmin();
+    }
+
+    match /deliveryAssignments/{assignmentId} {
+      allow read: if isAdmin() || (isDelivery() && (
+        resource.data.delivery_boy_id == request.auth.uid ||
+        resource.data.delivery_boy_email == email()
+      ));
+      allow create: if isAdmin()
+        && request.resource.data.order_id is string
+        && request.resource.data.delivery_boy_email is string
+        && request.resource.data.status == 'assigned';
+      allow update: if isAdmin() || (deliveryAssignmentBelongsToDriver(resource.data)
+        && changedKeys().hasOnly(['status', 'otp', 'cod_collected'])
+        && request.resource.data.status in ['assigned', 'picked_up', 'out_for_delivery', 'delivered', 'failed']);
+      allow delete: if isAdmin();
+    }
+
+    match /otps/{otpId} {
+      // OTP docs are server-managed only.
+      allow read, write: if false;
+    }
+  }
+}

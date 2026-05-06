@@ -684,6 +684,12 @@ app.post('/api/stripe/create-checkout-session', verifyAuth, async (req, res) => 
     }
 });
 
-app.listen(port, () => {
-    logInfo(`Server running on port ${port}`);
-});
+// Only start the HTTP server when this file is executed directly.
+// When imported (for serverless/Vercel), we export the `app` and let the platform invoke it.
+if (fileURLToPath(import.meta.url) === process.argv[1]) {
+    app.listen(port, () => {
+        logInfo(`Server running on port ${port}`);
+    });
+}
+
+export default app;

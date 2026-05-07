@@ -78,7 +78,7 @@ export default function Navbar({ cartCount = 0, onVoiceSearch = null, listening 
                 <div className="flex items-center gap-1 ml-auto flex-shrink-0">
                     {user && <NotificationBell userEmail={user.email} />}
                     {user ?
-                        <DropdownMenu>
+                        <DropdownMenu modal={false}>
                             <DropdownMenuTrigger asChild>
                                 <Button variant="ghost" className="text-white hover:bg-white/10 text-xs sm:text-sm gap-1 px-2 h-11 sm:h-9 min-w-[44px]">
                                     <User className="h-5 w-5 sm:h-4 sm:w-4" />

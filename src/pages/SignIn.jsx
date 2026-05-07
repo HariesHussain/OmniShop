@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/lib/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,12 +8,20 @@ import { Loader2 } from "lucide-react";
 
 export default function SignIn() {
     const navigate = useNavigate();
-    const { login, loginWithGoogle, clearAuthError, resetPassword } = useAuth();
+    const location = useLocation();
+    const { login, loginWithGoogle, clearAuthError, resetPassword, isAuthenticated } = useAuth();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [msg, setMsg] = useState("");
+
+    useEffect(() => {
+        if (isAuthenticated) {
+            const from = location.state?.from?.pathname || "/";
+            navigate(from, { replace: true });
+        }
+    }, [isAuthenticated, navigate, location]);
 
     const handleResetPassword = async () => {
         setMsg("");

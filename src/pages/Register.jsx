@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/lib/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,7 +9,8 @@ import { getApiBase } from "@/lib/apiConfig";
 
 export default function Register() {
     const navigate = useNavigate();
-    const { user, register, loginWithGoogle, updateProfile, clearAuthError } = useAuth();
+    const location = useLocation();
+    const { user, register, loginWithGoogle, updateProfile, clearAuthError, isAuthenticated } = useAuth();
     const [step, setStep] = useState("register");
     const [form, setForm] = useState({
         email: "",
@@ -29,6 +30,13 @@ export default function Register() {
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+
+    useEffect(() => {
+        if (isAuthenticated && step === "register") {
+            const from = location.state?.from?.pathname || "/";
+            navigate(from, { replace: true });
+        }
+    }, [isAuthenticated, navigate, location, step]);
 
     const sanitize = (str, max = 255) => String(str || "").trim().slice(0, max);
 
@@ -57,8 +65,16 @@ export default function Register() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email: form.email })
             });
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.error || 'Failed to send OTP');
+            
+            let data;
+            const contentType = response.headers.get("content-type");
+            if (contentType && contentType.includes("application/json")) {
+                data = await response.json();
+            } else {
+                throw new Error(`Server error: Expected JSON but received HTML/text (Status: ${response.status})`);
+            }
+
+            if (!response.ok) throw new Error(data?.error || 'Failed to send OTP');
             
             // Pre-fill address form with registration details
             setAddrForm(prev => ({
@@ -90,8 +106,16 @@ export default function Register() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email: form.email, otp })
             });
-            const verifyData = await verifyRes.json();
-            if (!verifyRes.ok) throw new Error(verifyData.error || 'Invalid code');
+            
+            let verifyData;
+            const contentType = verifyRes.headers.get("content-type");
+            if (contentType && contentType.includes("application/json")) {
+                verifyData = await verifyRes.json();
+            } else {
+                throw new Error(`Server error: Expected JSON but received HTML/text (Status: ${verifyRes.status})`);
+            }
+
+            if (!verifyRes.ok) throw new Error(verifyData?.error || 'Invalid code');
 
             await register(
                 sanitize(form.email, 254),

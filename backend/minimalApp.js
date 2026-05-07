@@ -1,6 +1,6 @@
 import express from "express";
 const app = express();
-app.get("/test", (req, res) => {
+app.get("/api/test", (req, res) => {
   res.json({
     success: true,
     express: true,

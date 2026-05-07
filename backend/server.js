@@ -112,6 +112,13 @@ app.get('/', (req, res) => {
     res.json({ message: 'OmniShop Backend API is running!' });
 });
 
+app.get("/test", (req, res) => {
+  res.json({
+    success: true,
+    express: true
+  });
+});
+
 app.get('/api/health', (req, res) => {
     res.json({
         ok: true,

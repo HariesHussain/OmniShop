@@ -27,31 +27,6 @@ export const AuthProvider = ({ children }) => {
     useEffect(() => {
         let unsubscribeProfile = null;
 
-        // Handle Google redirect result (crucial for mobile)
-        const checkRedirectResult = async () => {
-            try {
-                const result = await getRedirectResult(auth);
-                if (result?.user) {
-                    const newUser = result.user;
-                    const existingProfile = await getUser(newUser.uid);
-                    if (!existingProfile) {
-                        await createUserProfile(newUser.uid, {
-                            email: newUser.email,
-                            full_name: newUser.displayName || 'Google User',
-                            role: 'user',                        });
-                    }
-                }
-            } catch (error) {
-                console.error('Redirect sign-in error:', error);
-                setAuthError({
-                    type: 'google_login_error',
-                    message: error.message || 'Google login failed after redirect',
-                });
-            }
-        };
-
-        checkRedirectResult();
-
         // Listen for auth state changes
         const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
             // Clean up existing profile listener if any
@@ -263,6 +238,51 @@ export const AuthProvider = ({ children }) => {
             return true;
         } catch (error) {
             const errorMessage = error.code === 'auth/user-not-found'
+                ? 'Email not found'
+                : error.message || 'Password reset failed';
+
+            setAuthError({
+                type: 'password_reset_error',
+                message: errorMessage,
+            });
+            throw error;
+        }
+    };
+
+    const clearAuthError = () => {
+        setAuthError(null);
+    };
+
+    return (
+        <AuthContext.Provider value={{
+            user,
+            isAuthenticated,
+            isLoadingAuth,
+            authError,
+            authChecked,
+            register,
+            login,
+            loginWithGoogle,
+            logout,
+            updateProfile,
+            resetPassword,
+            clearAuthError,
+        }}>
+            {children}
+        </AuthContext.Provider>
+    );
+};
+
+export const useAuth = () => {
+    const context = useContext(AuthContext);
+    if (!context) {
+        throw new Error('useAuth must be used within an AuthProvider');
+    }
+    return context;
+};
+
+
+sage = error.code === 'auth/user-not-found'
                 ? 'Email not found'
                 : error.message || 'Password reset failed';
 

@@ -43,17 +43,17 @@ const AuthenticatedApp = () => {
             <Route path="/" element={<Home />} />
             <Route path="/product/:id" element={<ProductDetail />} />
             <Route path="/cart" element={<Cart />} />
-            <Route path="/checkout" element={<Checkout />} />
-            <Route path="/success" element={<PaymentSuccess />} />
-            <Route path="/cancel" element={<PaymentCancel />} />
-            <Route path="/orders" element={<Orders />} />
-            <Route path="/seller/dashboard" element={<SellerDashboard />} />
-            <Route path="/admin" element={<AdminPanel />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/seller/apply" element={<SellerApply />} />
-            <Route path="/delivery" element={<DeliveryDashboard />} />
-            <Route path="/order-tracking" element={<OrderTracking />} />
+            <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
+            <Route path="/success" element={<ProtectedRoute><PaymentSuccess /></ProtectedRoute>} />
+            <Route path="/cancel" element={<ProtectedRoute><PaymentCancel /></ProtectedRoute>} />
+            <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
+            <Route path="/seller/dashboard" element={<ProtectedRoute allowedRoles={['seller', 'admin']}><SellerDashboard /></ProtectedRoute>} />
+            <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminPanel /></ProtectedRoute>} />
+            <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+            <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+            <Route path="/seller/apply" element={<ProtectedRoute><SellerApply /></ProtectedRoute>} />
+            <Route path="/delivery" element={<ProtectedRoute allowedRoles={['delivery_boy', 'admin']}><DeliveryDashboard /></ProtectedRoute>} />
+            <Route path="/order-tracking" element={<ProtectedRoute><OrderTracking /></ProtectedRoute>} />
             <Route path="/sign-in" element={<SignIn />} />
             <Route path="/register" element={<Register />} />
             <Route path="/reset-password" element={<ResetPassword />} />

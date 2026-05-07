@@ -64,14 +64,10 @@ export default function SignIn() {
         clearAuthError();
         setLoading(true);
         try {
-            const user = await loginWithGoogle();
-            if (user) {
-                // Only navigate if we got a user back (popup flow)
-                // If user is null, it means we are using the redirect flow and the page is unloading
-                navigate("/");
-            }
-        } catch {
-            setError("Google sign-in failed. Please try again.");
+            await loginWithGoogle();
+            navigate("/");
+        } catch (err) {
+            setError(err.message || "Google sign-in failed. Please try again.");
             setLoading(false);
         }
     };

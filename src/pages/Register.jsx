@@ -137,12 +137,11 @@ export default function Register() {
         clearAuthError();
         setLoading(true);
         try {
-            const newUser = await loginWithGoogle();
+            await loginWithGoogle();
             // Google user might already have a profile, but if they just registered, we might want to ask for address
             setStep("address");
         } catch (err) {
-            setError("Google sign-up failed. Please try again.");
-        } finally {
+            setError(err.message || "Google sign-up failed. Please try again.");
             setLoading(false);
         }
     };

@@ -1,19 +1,4 @@
 import express from 'express';
-
-const app = express();
-
-app.get("/test", (req, res) => {
-  res.json({
-    success: true,
-    express: true,
-    minimal: true
-  });
-});
-
-export default app;
-
-/*
-// TEMP DISABLED FOR EXPRESS BRIDGE DEBUGGING
 import cors from 'cors';
 import dotenv from 'dotenv';
 import admin from 'firebase-admin';
@@ -29,7 +14,7 @@ const __dirname = path.dirname(__filename);
 const backendEnvPath = path.resolve(__dirname, '.env');
 dotenv.config({ path: backendEnvPath, override: true });
 
-// const app = express();
+const app = express();
 const port = process.env.PORT || 5000;
 const isProduction = process.env.NODE_ENV === 'production';
 const clientUrl = process.env.CLIENT_URL || process.env.FRONTEND_URL || 'http://localhost:5173';
@@ -340,16 +325,16 @@ app.post('/api/otp/send', async (req, res) => {
             from: resendFromEmail,
             to: normalizedEmail,
             subject: 'Your OmniShop Verification Code',
-            html: \`
+            html: `
                 <div style="font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
                     <h2 style="color: #fb923c; text-align: center;">Welcome to OmniShop!</h2>
                     <p>Use the following code to verify your email address:</p>
                     <div style="background: #fff7ed; padding: 20px; text-align: center; font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #ea580c; border-radius: 8px; margin: 20px 0;">
-                        \${otp}
+                        ${otp}
                     </div>
                     <p style="color: #666; font-size: 14px;">This code will expire in 5 minutes. If you didn't request this, you can safely ignore this email.</p>
                 </div>
-            \`,
+            `,
         });
 
         if (error) {
@@ -357,7 +342,7 @@ app.post('/api/otp/send', async (req, res) => {
             return res.status(500).json({ error: error.message });
         }
 
-        logInfo(\`[OTP] Resend success for \${normalizedEmail}:\`, data);
+        logInfo(`[OTP] Resend success for ${normalizedEmail}:`, data);
         res.json({ success: true, message: 'OTP sent successfully' });
     } catch (error) {
         logError('[OTP] Detailed Error:', error);
@@ -469,10 +454,10 @@ app.post('/api/orders/finalize', verifyAuth, async (req, res) => {
         for (const item of normalizedItems) {
             const productRef = admin.firestore().collection('products').doc(item.product_id);
             const productSnap = await productRef.get();
-            if (!productSnap.exists) return res.status(400).json({ error: \`Product not found: \${item.title}\` });
+            if (!productSnap.exists) return res.status(400).json({ error: `Product not found: ${item.title}` });
             const productData = productSnap.data();
             const currentStock = Number(productData?.stock || 0);
-            if (currentStock < item.quantity) return res.status(400).json({ error: \`Insufficient stock for \${item.title}\` });
+            if (currentStock < item.quantity) return res.status(400).json({ error: `Insufficient stock for ${item.title}` });
             batch.update(productRef, { stock: currentStock - item.quantity });
 
             if (item.cart_item_id) {
@@ -509,8 +494,8 @@ app.post('/api/orders/finalize', verifyAuth, async (req, res) => {
                 buyer_name: buyer_name || req.user.email,
                 buyer_email: req.user.email,
                 buyer_phone: String(addrObj.phone || ''),
-                delivery_address: \`\${addrObj.address || ''}, \${addrObj.city || ''}, \${addrObj.state || ''} - \${addrObj.pincode || ''}\`,
-                items_summary: normalizedItems.map(i => \`\${i.title} x\${i.quantity}\`).join(', '),
+                delivery_address: `${addrObj.address || ''}, ${addrObj.city || ''}, ${addrObj.state || ''} - ${addrObj.pincode || ''}`,
+                items_summary: normalizedItems.map(i => `${i.title} x${i.quantity}`).join(', '),
                 total_amount: expectedAmount,
                 payment_method,
                 status: 'assigned',
@@ -684,8 +669,8 @@ app.post('/api/stripe/create-checkout-session', verifyAuth, async (req, res) => 
             payment_method_types: ['card', 'upi'],
             line_items: lineItems,
             mode: 'payment',
-            success_url: \`\${clientUrl}/success?session_id={CHECKOUT_SESSION_ID}\`,
-            cancel_url: \`\${clientUrl}/cancel\`,
+            success_url: `${clientUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
+            cancel_url: `${clientUrl}/cancel`,
             metadata: {
                 userId: req.user.uid,
                 email: req.user.email
@@ -700,10 +685,11 @@ app.post('/api/stripe/create-checkout-session', verifyAuth, async (req, res) => 
 });
 
 // Only start the HTTP server when this file is executed directly.
-// When imported (for serverless/Vercel), we export the \`app\` and let the platform invoke it.
+// When imported (for serverless/Vercel), we export the `app` and let the platform invoke it.
 if (fileURLToPath(import.meta.url) === process.argv[1]) {
     app.listen(port, () => {
-        logInfo(\`Server running on port \${port}\`);
+        logInfo(`Server running on port ${port}`);
     });
 }
-*/
+
+export default app;

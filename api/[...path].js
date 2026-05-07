@@ -1,7 +1,3 @@
-export default function handler(req, res) {
-  return res.status(200).json({
-    success: true,
-    catchAll: true,
-    message: "Catch-all route working"
-  });
-}
+import serverless from "serverless-http";
+import app from "../backend/minimalApp.js";
+export default serverless(app);

@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
 import { HelmetProvider } from 'react-helmet-async'
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import SeoManager from '@/components/seo/SeoManager';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
@@ -58,6 +58,8 @@ const AuthenticatedApp = () => {
             <Route path="/register" element={<Register />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/p/:pageId" element={<StaticPage />} />
+            <Route path="/login" element={<Navigate to="/sign-in" replace />} />
+            <Route path="/dashboard" element={<Navigate to="/profile" replace />} />
             <Route path="*" element={<PageNotFound />} />
         </Routes>
     );

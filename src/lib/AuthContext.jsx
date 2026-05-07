@@ -7,8 +7,6 @@ import {
     sendPasswordResetEmail,
     sendEmailVerification,
     signInWithPopup,
-    signInWithRedirect,
-    getRedirectResult,
     GoogleAuthProvider,
 } from 'firebase/auth';
 import { doc, onSnapshot } from 'firebase/firestore';
@@ -105,7 +103,8 @@ export const AuthProvider = ({ children }) => {
             await createUserProfile(newUser.uid, {
                 email: newUser.email,
                 full_name: fullName,
-                role: 'user',            });
+                role: 'user',
+            });
 
             // Update local user state
             setUser({
@@ -153,31 +152,20 @@ export const AuthProvider = ({ children }) => {
             setAuthError(null);
             const provider = new GoogleAuthProvider();
             
-            // Check if device is mobile
-            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-            
-            if (isMobile) {
-                // Mobile browsers often block popups or kill the tab, so we redirect
-                await signInWithRedirect(auth, provider);
-                // We return null here because the redirect will reload the page.
-                // The result is handled by getRedirectResult in the useEffect.
-                return null;
-            } else {
-                // Desktop uses standard popup
-                const result = await signInWithPopup(auth, provider);
-                const newUser = result.user;
+            const result = await signInWithPopup(auth, provider);
+            const newUser = result.user;
 
-                // Check if user profile exists, if not create it
-                const existingProfile = await getUser(newUser.uid);
-                if (!existingProfile) {
-                    await createUserProfile(newUser.uid, {
-                        email: newUser.email,
-                        full_name: newUser.displayName || 'Google User',
-                        role: 'user',                    });
-                }
-
-                return newUser;
+            // Check if user profile exists, if not create it
+            const existingProfile = await getUser(newUser.uid);
+            if (!existingProfile) {
+                await createUserProfile(newUser.uid, {
+                    email: newUser.email,
+                    full_name: newUser.displayName || 'Google User',
+                    role: 'user',
+                });
             }
+
+            return newUser;
         } catch (error) {
             setAuthError({
                 type: 'google_login_error',
@@ -280,50 +268,3 @@ export const useAuth = () => {
     }
     return context;
 };
-
-
-sage = error.code === 'auth/user-not-found'
-                ? 'Email not found'
-                : error.message || 'Password reset failed';
-
-            setAuthError({
-                type: 'password_reset_error',
-                message: errorMessage,
-            });
-            throw error;
-        }
-    };
-
-    const clearAuthError = () => {
-        setAuthError(null);
-    };
-
-    return (
-        <AuthContext.Provider value={{
-            user,
-            isAuthenticated,
-            isLoadingAuth,
-            authError,
-            authChecked,
-            register,
-            login,
-            loginWithGoogle,
-            logout,
-            updateProfile,
-            resetPassword,
-            clearAuthError,
-        }}>
-            {children}
-        </AuthContext.Provider>
-    );
-};
-
-export const useAuth = () => {
-    const context = useContext(AuthContext);
-    if (!context) {
-        throw new Error('useAuth must be used within an AuthProvider');
-    }
-    return context;
-};
-
-
